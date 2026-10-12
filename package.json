@@ -1,15 +1,15 @@
 {
   "name": "osrs-randomizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "main.js",
   "scripts": {
     "dev": "electron .",
     "dist": "electron-builder",
     "pack": "electron-builder --dir",
-    "test": "node tests/regression.cjs"
+    "test": "node tests/regression.cjs && node tests/updates.cjs"
   },
   "devDependencies": {
-    "electron": "^30.0.0",
+    "electron": "^44.7.0",
     "electron-builder": "^26.15.3"
   },
   "build": {
@@ -60,12 +60,20 @@
   "description": "Randomizer de skills / bosses / raids pour Old School RuneScape (projet fan non officiel).",
   "author": "Marcan",
   "dependencies": {
-    "electron-log": "^5.2.0",
-    "electron-updater": "^6.3.9"
+    "electron-log": "^5.4.4",
+    "electron-updater": "^6.8.9"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/MarcanQc/osrs-randomizer.git"
   },
-  "homepage": "https://github.com/MarcanQc/osrs-randomizer"
+  "homepage": "https://github.com/MarcanQc/osrs-randomizer",
+  "overrides": {
+    "app-builder-lib": {
+      "@electron/get": "^5.1.0"
+    }
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
 }
