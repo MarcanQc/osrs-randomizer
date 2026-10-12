@@ -1,0 +1,23 @@
+const assert = require('node:assert/strict');
+const {EventEmitter} = require('node:events');
+const setup = require('../updates');
+(async () => {
+  const updater = new EventEmitter(), handlers = {}, states = [];
+  let checks = 0, installs = 0;
+  updater.checkForUpdates = async () => { checks++; updater.emit('checking-for-update'); updater.emit('update-available'); };
+  updater.quitAndInstall = () => installs++;
+  const service = setup({app:{isPackaged:true},updater,ipcMain:{handle:(k,v)=>handlers[k]=v},send:s=>states.push(s)});
+  assert.equal(updater.autoInstallOnAppQuit,false);
+  assert.equal(handlers['update:install'](),false);
+  await service.check(); await service.check(); assert.equal(checks,1);
+  updater.emit('download-progress',{percent:44.6}); assert.match(states.at(-1).message,/45/);
+  updater.emit('error',new Error('offline')); assert.equal(states.at(-1).phase,'error');
+  await service.check(); assert.equal(checks,2);
+  updater.emit('update-downloaded'); await service.check(); assert.equal(checks,2);
+  assert.equal(installs,0); assert.equal(handlers['update:install'](),true);
+  assert.equal(handlers['update:install'](),false);
+  await new Promise(setImmediate); assert.equal(installs,1);
+  const dev=setup({app:{isPackaged:false},updater,ipcMain:{handle(){}},send(){}});
+  assert.equal((await dev.check()).ok,false);
+  console.log('PASS: update lifecycle, retry, duplicate checks, explicit installation, development mode');
+})().catch(e=>{console.error(e);process.exitCode=1;});

@@ -1,0 +1,71 @@
+{
+  "name": "osrs-randomizer",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "dev": "electron .",
+    "dist": "electron-builder",
+    "pack": "electron-builder --dir",
+    "test": "node tests/regression.cjs"
+  },
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.osrs.randomizer",
+    "productName": "OSRS Randomizer",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "CHANGELOG.md",
+      "LICENSE",
+      "README.md",
+      "app.html",
+      "assets/**/*",
+      "main.js",
+      "package.json",
+      "preload.js",
+      "renderer.js",
+      "style.css",
+      "about.js",
+      "grimoire.css",
+      "updates.js"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/logo/icon.ico"
+    },
+    "asar": true,
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "OSRS Randomizer",
+      "uninstallDisplayName": "OSRS Randomizer"
+    },
+    "artifactName": "OSRS-Randomizer-Setup-${version}.${ext}",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "MarcanQc",
+        "repo": "osrs-randomizer"
+      }
+    ]
+  },
+  "productName": "OSRS Randomizer",
+  "description": "Randomizer de skills / bosses / raids pour Old School RuneScape (projet fan non officiel).",
+  "author": "Marcan",
+  "dependencies": {
+    "electron-log": "^5.2.0",
+    "electron-updater": "^6.3.9"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MarcanQc/osrs-randomizer.git"
+  },
+  "homepage": "https://github.com/MarcanQc/osrs-randomizer"
+}

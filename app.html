@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OSRS Randomizer</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="grimoire.css" />
+
+    <!-- Appliquer le thème AVANT affichage -->
+    <script>
+      (function () {
+        const theme = localStorage.getItem("osrs_theme") || "light";
+        if (theme === "dark") document.documentElement.classList.add("theme-dark");
+      })();
+    </script>
+  </head>
+
+  <body class="grimoire pageFade isEntering">
+    <div class="wrap">
+      <header class="topbar">
+        <div class="brand"><img class="appLogo" src="assets/logo/logo-osrs-randomizer-topbar.png" alt="OSRS Randomizer" draggable="false" /></div>
+        <div class="topbarActions"><button id="btnOptions" class="btn2" type="button">Réglages</button><button id="aboutBtn" class="about-btn about-inline" title="À propos" aria-label="À propos">i</button></div>
+      </header>
+      <main class="adventure-layout">
+        <aside class="adventure-sidebar" aria-label="Tirage et historique">
+          <section class="draw-panel">
+            <div class="panel-heading"><span class="eyebrow">Résultat</span><span id="drawMode" class="mode-caption">Skills</span></div>
+            <div id="result" class="result" aria-live="polite" aria-atomic="true"></div>
+            <div class="draw-controls"><div class="count-row"><label for="count">Quantité</label><input id="count" type="number" min="1" max="50" value="1" /></div><button id="roll" type="button">Tirer</button><p id="drawHint" class="draw-hint">Sélectionne au moins une activité.</p></div>
+          </section>
+          <section class="history-panel"><div class="panel-heading"><h2>Derniers tirages</h2><button id="clearHistory" class="btn2 text-action" type="button">Effacer</button></div><div id="history" class="history"></div><div class="history-pagination"><button id="prevPage" class="btn2" aria-label="Page précédente">←</button><span id="pageInfo" class="pageInfo">Page 1 / 1</span><button id="nextPage" class="btn2" aria-label="Page suivante">→</button></div></section>
+        </aside>
+        <section class="catalog-panel" aria-labelledby="catalogTitle">
+          <div class="catalog-heading"><div><h2 id="catalogTitle">Activités</h2></div><span id="selectionCount" class="selection-count" aria-live="polite"></span></div>
+          <div class="modePicker" role="group" aria-label="Type d’activité"><button class="modeBtn" data-mode="skills" type="button"><img src="assets/ui/skill.png" alt="" />Skills</button><button class="modeBtn" data-mode="bosses" type="button"><img src="assets/ui/boss.png" alt="" />Bosses</button><button class="modeBtn" data-mode="raids" type="button"><img src="assets/ui/raid.png" alt="" />Raids</button></div>
+          <div class="catalog-tools"><div class="search-wrap"><span aria-hidden="true">⌕</span><input id="catalogSearch" type="search" placeholder="Rechercher une activité…" aria-label="Rechercher dans le catalogue" autocomplete="off" /></div><select id="catalogFilter" aria-label="Filtrer le catalogue"><option value="all">Tout afficher</option><option value="selected">Sélectionnés</option><option value="unselected">Non sélectionnés</option><option value="new">Nouveaux boss</option></select></div>
+          <div class="pickerHeader"><span id="visibleCount" class="catalog-note"></span><div class="pickerBtns"><button id="selectAll" class="btn2 text-action" type="button">Tout</button><span class="action-divider">/</span><button id="selectNone" class="btn2 text-action" type="button">Aucun</button></div></div>
+          <div id="skillPicker" class="picker"></div>
+          <p class="catalog-footnote">Clique sur une carte pour l’inclure ou l’exclure du tirage.</p>
+        </section>
+      </main>
+      <footer class="appCredits"><span>OSRS Randomizer <span class="credit-dot">·</span> par Marcan</span><span>Projet fan non officiel · Jagex</span></footer>
+    </div>
+
+    <!-- SFX -->
+    <audio id="sfxClick" src="assets/sfx/click-video.wav" preload="auto"></audio>
+    <audio id="sfxRoll" src="assets/sfx/roll.wav" preload="auto"></audio>
+    <audio id="sfxWin" src="assets/sfx/win.mp3" preload="auto"></audio>
+
+    <!-- OPTIONS -->
+    <div id="optionsOverlay" class="overlay hidden" aria-hidden="true">
+      <div id="optionsModal" class="modal" role="dialog" aria-modal="true">
+        <div class="modalHeader">
+          <div class="modalTitle">Réglages</div>
+          <div class="modalSubtitle">Enregistrement automatique</div>
+          <button id="btnCloseOptions" class="btn2" type="button">X</button>
+        </div>
+
+        <div class="modalBody">
+          <div class="optRow">
+            <div class="optLabel">
+              <div class="optName">Thème</div>
+              <div class="optHint">Choisir clair ou sombre</div>
+            </div>
+
+            <div class="optControl">
+              <div class="themeToggle" role="group" aria-label="Thème">
+                <button id="btnThemeLight" class="toggleBtn" type="button">Clair</button>
+                <button id="btnThemeDark" class="toggleBtn" type="button">Sombre</button>
+              </div>
+
+              <!-- compat -->
+              <select id="theme" class="hidden">
+                <option value="light">Clair</option>
+                <option value="dark">Sombre</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="optDivider"></div>
+
+          <div class="optRow audio-row">
+            <div class="optLabel">
+              <label class="optName" for="volume">Volume général</label>
+              <div class="optHint">Ajuste le volume des sons</div>
+            </div>
+
+            <div class="optControl">
+              <input id="volume" type="range" min="0" max="100" value="70" />
+              <div class="optValue"><span id="volumeValue">70</span>%</div>
+            </div>
+          </div>
+          <div class="optDivider"></div>
+
+          <div class="optRow audio-row">
+            <label class="optLabel" for="clickVolume">Clics</label>
+            <div class="optControl"><input id="clickVolume" type="range" min="0" max="100" value="100" /><div class="optValue"><span id="clickVolumeValue">100</span>%</div></div>
+          </div>
+          <div class="optRow audio-row">
+            <label class="optLabel" for="rollVolume">Tirage</label>
+            <div class="optControl"><input id="rollVolume" type="range" min="0" max="100" value="100" /><div class="optValue"><span id="rollVolumeValue">100</span>%</div></div>
+          </div>
+          <div class="optRow audio-row">
+            <label class="optLabel" for="resultVolume">Résultat</label>
+            <div class="optControl"><input id="resultVolume" type="range" min="0" max="100" value="100" /><div class="optValue"><span id="resultVolumeValue">100</span>%</div></div>
+          </div>
+          <div class="optDivider"></div>
+          <label class="background-setting" for="avoidRepeats">
+            <input id="avoidRepeats" type="checkbox" checked />
+            <span><strong>Éviter les répétitions</strong><small>Écarte les activités des 3 derniers tirages de cette catégorie. Si nécessaire, réutilise les anciens tirages pour obtenir la quantité demandée.</small></span>
+          </label>
+          <div class="optDivider"></div>
+          <div class="optRow">
+            <div class="optLabel">
+              <div class="optName">Discord (Webhook)</div>
+              <div class="optHint">Envoie automatiquement le résultat du tirage dans un salon Discord</div>
+            </div>
+
+            <div class="optControl">
+              <input id="discordWebhook" type="url" class="textInput"
+                placeholder="https://discord.com/api/webhooks/..."
+                autocomplete="off" spellcheck="false" />
+            </div>
+          </div>
+
+          <div class="optDivider"></div>
+          <div class="settings-reset-row">
+            <button id="settingsReset" class="btn2" type="button">Réinitialiser les réglages</button>
+            <p>Rétablit le thème, les volumes et l’anti-répétition ; efface le webhook Discord et l’historique.</p>
+          </div>
+          <div id="settingsStatus" role="status"></div>
+
+        </div>
+
+      </div>
+    </div>
+
+
+    <script src="renderer.js"></script>
+
+    <script>
+      // Fade-in à l'arrivée
+      requestAnimationFrame(() => {
+        document.body.classList.remove("isEntering");
+      });
+
+      // Quit button in Options
+      const btnQuitApp = document.getElementById("btnQuitApp");
+      btnQuitApp?.addEventListener("click", () => {
+        if (window.app && typeof window.app.quit === "function") {
+          window.app.quit();
+        }
+      });
+    </script>
+  
+  <!-- About (PRO) -->
+<div id="aboutModal" aria-hidden="true">
+    <div id="aboutOverlay"></div>
+    <div id="aboutPanel" role="dialog" aria-modal="true" aria-label="À propos d’OSRS Randomizer">
+      <div id="aboutHeader">
+        <div>
+          <div id="aboutTitle"><span id="aboutProduct">OSRS Randomizer</span></div>
+          <div id="aboutMeta"><span id="aboutVersion"></span></div>
+        </div>
+        <button id="aboutClose" aria-label="Fermer">×</button>
+      </div>
+
+      <p id="aboutLinks">Créé par Marcan</p>
+      <div id="aboutActions" hidden>
+        <button id="aboutCheckUpdates" type="button">Vérifier les mises à jour</button>
+      </div>
+      <div id="aboutStatus"></div>
+    </div>
+  </div>
+
+  <div id="updateBanner" hidden role="status"><span id="updateMessage"></span><button id="updateRestart" type="button" hidden>Redémarrer maintenant</button></div>
+  <script src="about.js"></script>
+</body>
+</html>
